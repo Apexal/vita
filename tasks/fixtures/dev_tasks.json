@@ -1,0 +1,163 @@
+[
+  {
+    "model": "tasks.tag",
+    "pk": 1,
+    "fields": {
+      "name": "Home",
+      "color": "#4caf50",
+      "created_at": "2024-01-01T12:00:00Z",
+      "updated_at": "2024-01-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "tasks.tag",
+    "pk": 2,
+    "fields": {
+      "name": "Work",
+      "color": "#2196f3",
+      "created_at": "2024-01-02T12:00:00Z",
+      "updated_at": "2024-01-02T12:00:00Z"
+    }
+  },
+  {
+    "model": "tasks.tag",
+    "pk": 3,
+    "fields": {
+      "name": "Health",
+      "color": "#ff9800",
+      "created_at": "2024-01-03T12:00:00Z",
+      "updated_at": "2024-01-03T12:00:00Z"
+    }
+  },
+  {
+    "model": "tasks.task",
+    "pk": 1,
+    "fields": {
+      "title": "Buy groceries for the week",
+      "description": "Milk, eggs, chicken, veggies, coffee beans.",
+      "status": "todo",
+      "priority": 2,
+      "energy": "MEDIUM",
+      "due_at": "2024-09-15",
+      "estimate_minutes": 45,
+      "parent": null,
+      "order": 1,
+      "routine": null,
+      "routine_step": null,
+      "routine_date": null,
+      "promoted_from_routine": false,
+      "created_at": "2024-09-01T14:00:00Z",
+      "updated_at": "2024-09-01T14:00:00Z",
+      "tags": [1]
+    }
+  },
+  {
+    "model": "tasks.task",
+    "pk": 2,
+    "fields": {
+      "title": "Draft monthly update",
+      "description": "Outline accomplishments and next steps.",
+      "status": "in_progress",
+      "priority": 3,
+      "energy": "HIGH",
+      "due_at": "2024-09-10",
+      "estimate_minutes": 90,
+      "parent": null,
+      "order": 1,
+      "routine": null,
+      "routine_step": null,
+      "routine_date": null,
+      "promoted_from_routine": false,
+      "created_at": "2024-09-02T15:00:00Z",
+      "updated_at": "2024-09-03T10:00:00Z",
+      "tags": [2]
+    }
+  },
+  {
+    "model": "tasks.task",
+    "pk": 3,
+    "fields": {
+      "title": "Schedule annual physical",
+      "description": "Find earliest appointment with Dr. Lee.",
+      "status": "blocked",
+      "priority": 2,
+      "energy": "LOW",
+      "due_at": null,
+      "estimate_minutes": 20,
+      "parent": null,
+      "order": 1,
+      "routine": null,
+      "routine_step": null,
+      "routine_date": null,
+      "promoted_from_routine": false,
+      "created_at": "2024-09-04T09:00:00Z",
+      "updated_at": "2024-09-04T09:00:00Z",
+      "tags": [3]
+    }
+  },
+  {
+    "model": "tasks.task",
+    "pk": 4,
+    "fields": {
+      "title": "Call mom",
+      "description": "Catch up and plan visit next month.",
+      "status": "done",
+      "priority": 1,
+      "energy": "LOW",
+      "due_at": "2024-09-05",
+      "estimate_minutes": 15,
+      "parent": null,
+      "order": 1,
+      "routine": null,
+      "routine_step": null,
+      "routine_date": null,
+      "promoted_from_routine": false,
+      "created_at": "2024-08-31T17:00:00Z",
+      "updated_at": "2024-09-05T18:00:00Z",
+      "completed_at": "2024-09-05T18:00:00Z",
+      "tags": [1]
+    }
+  },
+  {
+    "model": "tasks.task",
+    "pk": 5,
+    "fields": {
+      "title": "Prep slides for demo",
+      "description": "Focus on metrics and roadmap.",
+      "status": "todo",
+      "priority": 4,
+      "energy": "HIGH",
+      "due_at": "2024-09-08",
+      "estimate_minutes": 120,
+      "parent": null,
+      "order": 2,
+      "routine": null,
+      "routine_step": null,
+      "routine_date": null,
+      "promoted_from_routine": false,
+      "created_at": "2024-09-02T13:00:00Z",
+      "updated_at": "2024-09-02T13:00:00Z",
+      "tags": [2]
+    }
+  },
+  {
+    "model": "tasks.comment",
+    "pk": 1,
+    "fields": {
+      "task": 2,
+      "content": "Need updated numbers from finance before finalizing.",
+      "created_at": "2024-09-03T11:00:00Z",
+      "updated_at": "2024-09-03T11:00:00Z"
+    }
+  },
+  {
+    "model": "tasks.comment",
+    "pk": 2,
+    "fields": {
+      "task": 1,
+      "content": "Remember to use the grocery coupons.",
+      "created_at": "2024-09-01T15:30:00Z",
+      "updated_at": "2024-09-01T15:30:00Z"
+    }
+  }
+]
