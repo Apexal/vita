@@ -1,6 +1,6 @@
 <div
   id="kanban-board"
-  class="row g-3"
+  class="d-flex gap-3 flex-nowrap overflow-auto"
   data-move-url="{% url 'task_move' %}"
 >
   {% if error %}
@@ -9,19 +9,20 @@
     </div>
   {% endif %}
   {% for column in columns %}
-    <div class="col-12 col-md-6 col-xl-3" data-column data-status="{{ column.code }}">
-      <div class="card shadow-sm h-100">
-        <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="kanban-column flex-shrink-0" data-column data-status="{{ column.code }}">
+      <div class="card shadow-sm h-100 border-0">
+        <div class="card-header d-flex justify-content-between align-items-center bg-white">
           <span class="fw-semibold">{{ column.label }}</span>
           <span class="badge bg-secondary">{{ column.tasks|length }}</span>
         </div>
-        <div class="card-body bg-light-subtle" style="min-height: 200px;">
+        <div class="card-body kanban-column-body">
           {% for task in column.tasks %}
             <div
-              class="card mb-2 border-0 shadow-sm"
+              class="card mb-2 border-0 shadow-sm position-relative kanban-card bg-light"
               draggable="true"
               data-card
               data-task-id="{{ task.id }}"
+              {% if dropped_task_pk == task.id %}data-dropped{% endif %}
             >
               <div class="card-body py-2">
                 <div class="d-flex justify-content-between align-items-start gap-2">
@@ -41,6 +42,10 @@
                     <span class="badge bg-secondary">{{ tag.name }}</span>
                   {% endfor %}
                 </div>
+                <a
+                  href="{% url 'edit_task' task.id %}"
+                  class="stretched-link"
+                ></a>
               </div>
             </div>
           {% empty %}

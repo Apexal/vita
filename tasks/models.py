@@ -98,16 +98,6 @@ class Task(TimestampedModel):
         blank=True,
         help_text="Due date for completion.",
     )
-    starts_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Planned start date and time.",
-    )
-    ends_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Planned end date and time.",
-    )
     estimate_minutes = models.PositiveSmallIntegerField(
         null=True,
         blank=True,

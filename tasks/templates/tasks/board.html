@@ -13,8 +13,39 @@
 </div>
 
 <script>
+    let boardScrollLeft = 0;
+    let autoScrollDirection = 0;
+    let autoScrollFrame = null;
+    let boardEl = null;
+
+    const getBoard = () => {
+      boardEl = document.getElementById("kanban-board");
+      return boardEl;
+    };
+
+    const stopAutoScroll = () => {
+      autoScrollDirection = 0;
+      if (autoScrollFrame) {
+        cancelAnimationFrame(autoScrollFrame);
+        autoScrollFrame = null;
+      }
+    };
+
+    const startAutoScroll = () => {
+      if (autoScrollFrame) return;
+      const step = () => {
+        if (autoScrollDirection !== 0 && boardEl) {
+          boardEl.scrollLeft += autoScrollDirection * 18;
+          autoScrollFrame = requestAnimationFrame(step);
+        } else {
+          autoScrollFrame = null;
+        }
+      };
+      autoScrollFrame = requestAnimationFrame(step);
+    };
+
     const initKanbanDragAndDrop = () => {
-      const board = document.getElementById("kanban-board");
+      const board = getBoard();
       if (!board) return;
 
       const moveUrl = board.dataset.moveUrl;
@@ -31,6 +62,10 @@
       });
 
       board.querySelectorAll("[data-column]").forEach((column) => {
+        column.addEventListener("dragenter", (event) => {
+          event.preventDefault();
+          column.classList.add("drop-target");
+        });
         column.addEventListener("dragover", (event) => {
           event.preventDefault();
         });
@@ -39,6 +74,10 @@
           event.preventDefault();
           const taskId = event.dataTransfer.getData("text/plain");
           const status = column.dataset.status;
+          column.classList.add("drop-received");
+          setTimeout(() => column.classList.remove("drop-received"), 180);
+          column.classList.remove("drop-target");
+          stopAutoScroll();
 
           htmx.ajax("POST", moveUrl, {
             target: "#kanban-board",
@@ -46,11 +85,42 @@
             values: { task_id: taskId, status },
           });
         });
+
+        column.addEventListener("dragleave", () => {
+          column.classList.remove("drop-target");
+        });
       });
     };
 
+    document.addEventListener("dragover", (event) => {
+      const board = boardEl || getBoard();
+      if (!board) return;
+      const rect = board.getBoundingClientRect();
+      const edgeBuffer = 80;
+      const x = event.clientX;
+      if (x < rect.left + edgeBuffer) {
+        autoScrollDirection = -1;
+        startAutoScroll();
+      } else if (x > rect.right - edgeBuffer) {
+        autoScrollDirection = 1;
+        startAutoScroll();
+      } else {
+        autoScrollDirection = 0;
+      }
+    });
+
+    document.addEventListener("dragend", () => stopAutoScroll());
+
+    document.addEventListener("htmx:beforeSwap", (event) => {
+      if (event.target && event.target.id === "kanban-board") {
+        boardScrollLeft = event.target.scrollLeft;
+      }
+    });
+
     document.addEventListener("htmx:afterSwap", (event) => {
       if (event.target && event.target.id === "kanban-board") {
+        event.target.scrollLeft = boardScrollLeft;
+        boardEl = event.target;
         initKanbanDragAndDrop();
       }
     });
@@ -59,4 +129,40 @@
       initKanbanDragAndDrop();
     });
 </script>
+
+<style>
+  @keyframes popIn {
+    0% {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  .kanban-card.dragging {
+    transition: transform 0.2s ease;
+    transform: scale(0.95);
+  }
+
+  .kanban-card[data-dropped] {
+    animation: popIn 0.2s ease-out;
+  }
+
+  #kanban-board .kanban-column {
+    width: 350px;
+  }
+
+  @media (max-width: 768px) {
+    #kanban-board {
+      padding-bottom: 0.5rem;
+    }
+    #kanban-board .kanban-column {
+      width: 85vw;
+    }
+  }
+
+</style>
 {% endblock %}

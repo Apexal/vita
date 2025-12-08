@@ -1,0 +1,34 @@
+{% load tz %}
+
+<div class="card shadow-sm mt-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">Comments</span>
+    <span class="badge bg-secondary">{{ task.comments.count }}</span>
+  </div>
+  <div class="card-body">
+    <div class="mb-3">
+      {% for comment in task.comments.all %}
+        <div class="border rounded p-2 mb-2 bg-white">
+          <div class="small text-muted mb-1">
+            {% timezone "America/New_York" %}{{ comment.created_at|date:"M j, Y g:i A" }}{% endtimezone %}
+          </div>
+          <div>{{ comment.content }}</div>
+        </div>
+      {% empty %}
+        <div class="text-muted small">No comments yet.</div>
+      {% endfor %}
+    </div>
+    <form
+      method="post"
+      action="{% url 'edit_task' task.id %}"
+      hx-post="{% url 'edit_task' task.id %}"
+      hx-target="#task-comments"
+      hx-swap="outerHTML"
+      class="d-flex gap-2"
+    >
+      {% csrf_token %}
+      {{ comment_form.content }}
+      <button class="btn btn-primary" type="submit">Add</button>
+    </form>
+  </div>
+</div>

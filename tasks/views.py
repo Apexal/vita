@@ -1,10 +1,12 @@
 from typing import Dict, List
+from django import forms
 from django.db import models
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from core.views import HttpRequest
 from tasks.models import Task
+from tasks.models import Comment
 
 BOARD_STATUSES = [
     (Task.Status.TODO, "To do"),
@@ -42,7 +44,11 @@ def move_task(request: HttpRequest):
     task.order = max_order + 1
     task.save(update_fields=["status", "order", "updated_at"])
 
-    return render(request, "tasks/partials/board.html", _fetch_board_context())
+    return render(
+        request,
+        "tasks/partials/board.html",
+        {**_fetch_board_context(), "dropped_task_pk": task.pk},
+    )
 
 
 # Helper functions
@@ -64,3 +70,104 @@ def _fetch_board_context():
         for code, label in BOARD_STATUSES
     ]
     return {"columns": columns}
+
+
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = [
+            "title",
+            "description",
+            "status",
+            "priority",
+            "energy",
+            "due_at",
+            "estimate_minutes",
+            "parent",
+            "tags",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(
+                attrs={"class": "form-control", "rows": 3, "placeholder": "Details"}
+            ),
+            "due_at": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "estimate_minutes": forms.NumberInput(attrs={"class": "form-control"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ["status", "priority", "energy", "parent", "tags"]:
+            widget = self.fields[name].widget
+            css = widget.attrs.get("class", "")
+            widget.attrs["class"] = f"{css} form-select".strip()
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["content"]
+        widgets = {
+            "content": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 2,
+                    "placeholder": "Add a comment...",
+                }
+            )
+        }
+
+
+def edit_task(request: HttpRequest, task_id: int):
+    task = get_object_or_404(Task, pk=task_id)
+    comment_form = CommentForm()
+
+    if request.method == "POST":
+        # If the POST is for comments
+        if "content" in request.POST and "title" not in request.POST:
+            comment_form = CommentForm(request.POST)
+            form = TaskForm(instance=task)
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.task = task
+                comment.save()
+                if request.htmx:
+                    return render(
+                        request,
+                        "tasks/partials/task_comments.html",
+                        {"task": task, "comment_form": CommentForm()},
+                    )
+                return redirect("edit_task", task_id=task.id)
+        else:
+            form = TaskForm(request.POST, instance=task)
+            if form.is_valid():
+                form.save()
+                if request.htmx:
+                    return render(
+                        request,
+                        "tasks/partials/task_form_card.html",
+                        {
+                            "form": form,
+                            "task": task,
+                            "saved": True,
+                            "comment_form": comment_form,
+                        },
+                    )
+                return redirect("task_board")
+    else:
+        form = TaskForm(instance=task)
+
+    template = (
+        "tasks/partials/task_form_card.html" if request.htmx else "tasks/task_edit.html"
+    )
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "task": task,
+            "saved": False,
+            "comment_form": comment_form,
+        },
+        status=400 if form.errors else 200,
+    )
