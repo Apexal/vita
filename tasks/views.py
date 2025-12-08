@@ -1,6 +1,9 @@
 from typing import Dict, List
+from datetime import timedelta
+
 from django import forms
 from django.db import models
+from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -12,7 +15,7 @@ BOARD_STATUSES = [
     (Task.Status.TODO, "To do"),
     (Task.Status.IN_PROGRESS, "In progress"),
     (Task.Status.BLOCKED, "Blocked"),
-    (Task.Status.DONE, "Done"),
+    (Task.Status.DONE, "Recently done"),
 ]
 
 
@@ -42,7 +45,11 @@ def move_task(request: HttpRequest):
     )
     task.status = status
     task.order = max_order + 1
-    task.save(update_fields=["status", "order", "updated_at"])
+    update_fields = ["status", "order", "updated_at"]
+    if status == Task.Status.DONE and task.completed_at is None:
+        task.completed_at = timezone.now()
+        update_fields.append("completed_at")
+    task.save(update_fields=update_fields)
 
     return render(
         request,
@@ -53,8 +60,13 @@ def move_task(request: HttpRequest):
 
 # Helper functions
 def _fetch_board_context():
+    cutoff = timezone.now() - timedelta(days=14)
     tasks = (
         Task.objects.filter(status__in=[code for code, _ in BOARD_STATUSES])
+        .filter(
+            models.Q(status=Task.Status.DONE, completed_at__gte=cutoff)
+            | ~models.Q(status=Task.Status.DONE)
+        )
         .select_related("parent")
         .prefetch_related("tags")
         .order_by("order", "-priority", "due_at", "-created_at")
@@ -137,7 +149,7 @@ def edit_task(request: HttpRequest, task_id: int):
                         "tasks/partials/task_comments.html",
                         {"task": task, "comment_form": CommentForm()},
                     )
-                return redirect("edit_task", task_id=task.id)
+                return redirect("edit_task", task_id=task.pk)
         else:
             form = TaskForm(request.POST, instance=task)
             if form.is_valid():

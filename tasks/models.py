@@ -172,18 +172,30 @@ class Task(TimestampedModel):
     def __str__(self) -> str:
         return self.title
 
+    def save(self, *args, **kwargs):
+        set_completed = self.status == Task.Status.DONE and self.completed_at is None
+        if set_completed:
+            self.completed_at = timezone.now()
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                fields = set(update_fields)
+                fields.add("completed_at")
+                kwargs["update_fields"] = list(fields)
+        clear_completed = (
+            self.status != Task.Status.DONE and self.completed_at is not None
+        )
+        if clear_completed:
+            self.completed_at = None
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                fields = set(update_fields)
+                fields.add("completed_at")
+                kwargs["update_fields"] = list(fields)
+        super().save(*args, **kwargs)
+
     @property
     def is_routine_task(self) -> bool:
         return self.routine is not None
-
-    def cancel(self) -> None:
-        self.status = Task.Status.CANCELLED
-        self.save(update_fields=["status", "updated_at"])
-
-    def mark_done(self) -> None:
-        self.status = Task.Status.DONE
-        self.completed_at = timezone.now()
-        self.save(update_fields=["status", "completed_at", "updated_at"])
 
     @property
     def is_subtask(self) -> bool:

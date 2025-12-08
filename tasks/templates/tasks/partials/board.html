@@ -20,8 +20,12 @@
             <div
               class="card mb-2 border-0 shadow-sm position-relative kanban-card bg-light"
               draggable="true"
+              tabindex="0"
               data-card
               data-task-id="{{ task.id }}"
+              data-href="{% url 'edit_task' task.id %}"
+              role="button"
+              aria-label="Edit {{ task.title }}"
               {% if dropped_task_pk == task.id %}data-dropped{% endif %}
             >
               <div class="card-body py-2">
@@ -45,6 +49,8 @@
                 <a
                   href="{% url 'edit_task' task.id %}"
                   class="stretched-link"
+                  tabindex="-1"
+                  aria-hidden="true"
                 ></a>
               </div>
             </div>

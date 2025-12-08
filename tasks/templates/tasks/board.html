@@ -59,6 +59,14 @@
         card.addEventListener("dragend", () => {
           card.classList.remove("dragging");
         });
+
+        card.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            const target = card.dataset.href;
+            if (target) window.location.href = target;
+          }
+        });
       });
 
       board.querySelectorAll("[data-column]").forEach((column) => {
@@ -145,6 +153,17 @@
   .kanban-card.dragging {
     transition: transform 0.2s ease;
     transform: scale(0.95);
+  }
+
+  #kanban-board .kanban-card {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, outline-color 0.2s ease;
+  }
+
+  #kanban-board .kanban-card:focus {
+    outline-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.3);
   }
 
   .kanban-card[data-dropped] {
