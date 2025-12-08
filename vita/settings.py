@@ -10,11 +10,24 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def env(key, default=None):
+    val = os.getenv(key, default)
+    if val is None and default is None:
+        raise KeyError(
+            f"Environment variable '{key}' not found and no default value provided."
+        )
+    return val
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -124,3 +137,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+# Email
+
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+RESEND_SMTP_PORT = 587
+RESEND_SMTP_USERNAME = "resend"
+RESEND_SMTP_HOST = "smtp.resend.com"

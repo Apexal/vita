@@ -12,130 +12,74 @@
   {% include "tasks/partials/board.html" %}
 </div>
 
+
+
 <script>
-    let boardScrollLeft = 0;
-    let autoScrollDirection = 0;
-    let autoScrollFrame = null;
-    let boardEl = null;
+  let boardScrollLeft = 0;
 
-    const getBoard = () => {
-      boardEl = document.getElementById("kanban-board");
-      return boardEl;
-    };
+  const initKanbanDragAndDrop = () => {
+    const board = document.getElementById("kanban-board");
+    if (!board) return;
 
-    const stopAutoScroll = () => {
-      autoScrollDirection = 0;
-      if (autoScrollFrame) {
-        cancelAnimationFrame(autoScrollFrame);
-        autoScrollFrame = null;
-      }
-    };
+    const moveUrl = board.dataset.moveUrl;
 
-    const startAutoScroll = () => {
-      if (autoScrollFrame) return;
-      const step = () => {
-        if (autoScrollDirection !== 0 && boardEl) {
-          boardEl.scrollLeft += autoScrollDirection * 18;
-          autoScrollFrame = requestAnimationFrame(step);
-        } else {
-          autoScrollFrame = null;
+    board.querySelectorAll("[data-card]").forEach((card) => {
+      card.addEventListener("dragstart", (event) => {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", card.dataset.taskId);
+        card.classList.add("dragging");
+      });
+      card.addEventListener("dragend", () => {
+        card.classList.remove("dragging");
+      });
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          const target = card.dataset.href;
+          if (target) window.location.href = target;
         }
-      };
-      autoScrollFrame = requestAnimationFrame(step);
-    };
+      });
+    });
 
-    const initKanbanDragAndDrop = () => {
-      const board = getBoard();
-      if (!board) return;
-
-      const moveUrl = board.dataset.moveUrl;
-
-      board.querySelectorAll("[data-card]").forEach((card) => {
-        card.addEventListener("dragstart", (event) => {
-          event.dataTransfer.effectAllowed = "move";
-          event.dataTransfer.setData("text/plain", card.dataset.taskId);
-          card.classList.add("dragging");
-        });
-        card.addEventListener("dragend", () => {
-          card.classList.remove("dragging");
-        });
-
-        card.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            const target = card.dataset.href;
-            if (target) window.location.href = target;
-          }
+    board.querySelectorAll("[data-column]").forEach((column) => {
+      column.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        column.classList.add("drop-target");
+      });
+      column.addEventListener("dragleave", () => {
+        column.classList.remove("drop-target");
+      });
+      column.addEventListener("drop", (event) => {
+        event.preventDefault();
+        column.classList.remove("drop-target");
+        const taskId = event.dataTransfer.getData("text/plain");
+        const status = column.dataset.status;
+        if (!taskId || !status) return;
+        column.classList.add("drop-received");
+        setTimeout(() => column.classList.remove("drop-received"), 180);
+        htmx.ajax("POST", moveUrl, {
+          target: "#kanban-board",
+          swap: "outerHTML",
+          values: { task_id: taskId, status },
         });
       });
-
-      board.querySelectorAll("[data-column]").forEach((column) => {
-        column.addEventListener("dragenter", (event) => {
-          event.preventDefault();
-          column.classList.add("drop-target");
-        });
-        column.addEventListener("dragover", (event) => {
-          event.preventDefault();
-        });
-
-        column.addEventListener("drop", (event) => {
-          event.preventDefault();
-          const taskId = event.dataTransfer.getData("text/plain");
-          const status = column.dataset.status;
-          column.classList.add("drop-received");
-          setTimeout(() => column.classList.remove("drop-received"), 180);
-          column.classList.remove("drop-target");
-          stopAutoScroll();
-
-          htmx.ajax("POST", moveUrl, {
-            target: "#kanban-board",
-            swap: "outerHTML",
-            values: { task_id: taskId, status },
-          });
-        });
-
-        column.addEventListener("dragleave", () => {
-          column.classList.remove("drop-target");
-        });
-      });
-    };
-
-    document.addEventListener("dragover", (event) => {
-      const board = boardEl || getBoard();
-      if (!board) return;
-      const rect = board.getBoundingClientRect();
-      const edgeBuffer = 80;
-      const x = event.clientX;
-      if (x < rect.left + edgeBuffer) {
-        autoScrollDirection = -1;
-        startAutoScroll();
-      } else if (x > rect.right - edgeBuffer) {
-        autoScrollDirection = 1;
-        startAutoScroll();
-      } else {
-        autoScrollDirection = 0;
-      }
     });
+  };
 
-    document.addEventListener("dragend", () => stopAutoScroll());
-
-    document.addEventListener("htmx:beforeSwap", (event) => {
-      if (event.target && event.target.id === "kanban-board") {
-        boardScrollLeft = event.target.scrollLeft;
-      }
-    });
-
-    document.addEventListener("htmx:afterSwap", (event) => {
-      if (event.target && event.target.id === "kanban-board") {
-        event.target.scrollLeft = boardScrollLeft;
-        boardEl = event.target;
-        initKanbanDragAndDrop();
-      }
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("htmx:afterSwap", (event) => {
+    if (event.target && event.target.id === "kanban-board") {
+      event.target.scrollLeft = boardScrollLeft;
       initKanbanDragAndDrop();
-    });
+    }
+  });
+
+  document.addEventListener("htmx:beforeSwap", (event) => {
+    if (event.target && event.target.id === "kanban-board") {
+      boardScrollLeft = event.target.scrollLeft;
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", initKanbanDragAndDrop);
 </script>
 
 <style>
@@ -171,8 +115,9 @@
   }
 
   #kanban-board .kanban-column {
+    min-width: 350px;
     width: 350px;
-    min-height: 700px;
+    min-height: 600px;
   }
 
   @media (max-width: 768px) {
@@ -180,7 +125,7 @@
       padding-bottom: 0.5rem;
     }
     #kanban-board .kanban-column {
-      width: 85vw;
+      width: 70vw;
     }
   }
 
