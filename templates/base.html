@@ -6,6 +6,9 @@
   <head>
     <meta charset="utf-8" />
     <title>Vita - Frank OS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Vita - Frank OS" />
+    <meta name="author" content="Frank Matranga" />
 
     {% bootstrap_css %}
     {% bootstrap_javascript %}
@@ -17,7 +20,7 @@
       <div class="container-fluid">
         <a class="navbar-brand" href="#">Vita - Frank OS</a>
         <div class="navbar-nav">
-          <a class="nav-link" href="#">Today</a>
+          <a class="nav-link" href="{% url 'task_board' %}">Tasks</a>
           <a class="nav-link" href="#">Inbox</a>
         </div>
       </div>
