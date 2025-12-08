@@ -5,85 +5,186 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Tag',
+            name="Tag",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=50, unique=True)),
-                ('color', models.CharField(blank=True, help_text='Optional hex color for UI accents.', max_length=7)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=50, unique=True)),
+                (
+                    "color",
+                    models.CharField(
+                        blank=True,
+                        help_text="Optional hex color for UI accents.",
+                        max_length=7,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['name'],
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='Project',
+            name="Project",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('archived_at', models.DateTimeField(blank=True, null=True)),
-                ('tags', models.ManyToManyField(blank=True, related_name='projects', to='tasks.tag')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("archived_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "tags",
+                    models.ManyToManyField(
+                        blank=True, related_name="projects", to="tasks.tag"
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Task',
+            name="Task",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True)),
-                ('status', models.CharField(choices=[('todo', 'To do'), ('in_progress', 'In progress'), ('blocked', 'Blocked'), ('cancelled', 'Cancelled'), ('done', 'Done')], default='todo', max_length=20)),
-                ('priority', models.PositiveSmallIntegerField(choices=[(1, 'Low'), (2, 'Normal'), (3, 'High'), (4, 'Urgent')], default=2)),
-                ('due_at', models.DateField(blank=True, null=True)),
-                ('starts_at', models.DateTimeField(blank=True, null=True)),
-                ('ends_at', models.DateTimeField(blank=True, null=True)),
-                ('estimate_minutes', models.PositiveSmallIntegerField(blank=True, null=True)),
-                ('energy', models.CharField(choices=[('LOW', 'Low'), ('MEDIUM', 'Medium'), ('HIGH', 'High')], default='MEDIUM', max_length=8)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
-                ('order', models.PositiveIntegerField(default=0, help_text='Manual ordering within a list.')),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subtasks', to='tasks.task')),
-                ('tags', models.ManyToManyField(blank=True, related_name='tasks', to='tasks.tag')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("todo", "To do"),
+                            ("in_progress", "In progress"),
+                            ("blocked", "Blocked"),
+                            ("cancelled", "Cancelled"),
+                            ("done", "Done"),
+                        ],
+                        default="todo",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "priority",
+                    models.PositiveSmallIntegerField(
+                        choices=[(1, "Low"), (2, "Normal"), (3, "High"), (4, "Urgent")],
+                        default=2,
+                    ),
+                ),
+                ("due_at", models.DateField(blank=True, null=True)),
+                ("starts_at", models.DateTimeField(blank=True, null=True)),
+                ("ends_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "estimate_minutes",
+                    models.PositiveSmallIntegerField(blank=True, null=True),
+                ),
+                (
+                    "energy",
+                    models.CharField(
+                        choices=[
+                            ("LOW", "Low"),
+                            ("MEDIUM", "Medium"),
+                            ("HIGH", "High"),
+                        ],
+                        default="MEDIUM",
+                        max_length=8,
+                    ),
+                ),
+                ("completed_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "order",
+                    models.PositiveIntegerField(
+                        default=0, help_text="Manual ordering within a list."
+                    ),
+                ),
+                (
+                    "parent",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="subtasks",
+                        to="tasks.task",
+                    ),
+                ),
+                (
+                    "tags",
+                    models.ManyToManyField(
+                        blank=True, related_name="tasks", to="tasks.tag"
+                    ),
+                ),
             ],
             options={
-                'ordering': ['status', '-priority', 'due_at', 'order', '-created_at'],
+                "ordering": ["status", "-priority", "due_at", "order", "-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='Comment',
+            name="Comment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('content', models.TextField()),
-                ('task', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='tasks.task')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("content", models.TextField()),
+                (
+                    "task",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comments",
+                        to="tasks.task",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.AddIndex(
-            model_name='task',
-            index=models.Index(fields=['status'], name='tasks_task_status_4a0a95_idx'),
+            model_name="task",
+            index=models.Index(fields=["status"], name="tasks_task_status_4a0a95_idx"),
         ),
         migrations.AddIndex(
-            model_name='task',
-            index=models.Index(fields=['due_at'], name='tasks_task_due_at_59a3cb_idx'),
+            model_name="task",
+            index=models.Index(fields=["due_at"], name="tasks_task_due_at_59a3cb_idx"),
         ),
     ]
