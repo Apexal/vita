@@ -1,3 +1,6 @@
-from django.shortcuts import render
+from django.http import HttpRequest as HttpRequestBase
+from django_htmx.middleware import HtmxDetails
 
-# Create your views here.
+
+class HttpRequest(HttpRequestBase):
+    htmx: HtmxDetails

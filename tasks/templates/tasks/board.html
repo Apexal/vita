@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <p class="text-uppercase text-muted small mb-1">Tasks</p>
+      <h1 class="h3 mb-0">Kanban Board</h1>
+    </div>
+  </div>
+
+  {% include "tasks/partials/board.html" %}
+</div>
+
+<script>
+    const initKanbanDragAndDrop = () => {
+      const board = document.getElementById("kanban-board");
+      if (!board) return;
+
+      const moveUrl = board.dataset.moveUrl;
+
+      board.querySelectorAll("[data-card]").forEach((card) => {
+        card.addEventListener("dragstart", (event) => {
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", card.dataset.taskId);
+          card.classList.add("dragging");
+        });
+        card.addEventListener("dragend", () => {
+          card.classList.remove("dragging");
+        });
+      });
+
+      board.querySelectorAll("[data-column]").forEach((column) => {
+        column.addEventListener("dragover", (event) => {
+          event.preventDefault();
+        });
+
+        column.addEventListener("drop", (event) => {
+          event.preventDefault();
+          const taskId = event.dataTransfer.getData("text/plain");
+          const status = column.dataset.status;
+
+          htmx.ajax("POST", moveUrl, {
+            target: "#kanban-board",
+            swap: "outerHTML",
+            values: { task_id: taskId, status },
+          });
+        });
+      });
+    };
+
+    document.addEventListener("htmx:afterSwap", (event) => {
+      if (event.target && event.target.id === "kanban-board") {
+        initKanbanDragAndDrop();
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initKanbanDragAndDrop();
+    });
+</script>
+{% endblock %}
