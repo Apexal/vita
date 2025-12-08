@@ -26,6 +26,18 @@ wheels = [
 ]
 
 [[package]]
+name = "django-bootstrap5"
+version = "25.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/60/73/764367acc94f22b68f1ff8d39be511afa0315fd83299abdd6542bdeffdb4/django_bootstrap5-25.3.tar.gz", hash = "sha256:cc36f1a19d3200c0f5628c703320edb5c4e39e19bf17607fadf58ddb11828912", size = 49738, upload-time = "2025-11-14T13:00:13.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/56/0d/ae17205ff3f9e04deb364b037c506ff94166c23b0a7424208d39174c84f9/django_bootstrap5-25.3-py3-none-any.whl", hash = "sha256:3d381a5329a1439ac3237456c28cc8170c62b4c56ad3564d57876ffc3d4c5e78", size = 26772, upload-time = "2025-11-14T13:00:11.709Z" },
+]
+
+[[package]]
 name = "ruff"
 version = "0.14.8"
 source = { registry = "https://pypi.org/simple" }
@@ -75,6 +87,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "django" },
+    { name = "django-bootstrap5" },
 ]
 
 [package.dev-dependencies]
@@ -83,7 +96,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "django", specifier = ">=6.0" }]
+requires-dist = [
+    { name = "django", specifier = ">=6.0" },
+    { name = "django-bootstrap5", specifier = ">=25.3" },
+]
 
 [package.metadata.requires-dev]
 dev = [{ name = "ruff", specifier = ">=0.14.8" }]
