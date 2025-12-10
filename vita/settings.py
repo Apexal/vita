@@ -45,6 +45,18 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS", "localhost,127.0.0.1,.fly.dev").split(",")
 
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS", "https://*.fly.dev").split(",")
 
+CSRF_COOKIE_SECURE = True
+
+SESSION_COOKIE_SECURE = True
+
+# SECURE_HSTS_SECONDS = 3600  # TODO: Update to larger value in production
+
+# SECURE_SSL_REDIRECT = True
+
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+# SECURE_HSTS_PRELOAD = True
+
 # Application definition
 
 INSTALLED_APPS = [
