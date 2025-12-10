@@ -129,6 +129,12 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+if not DEBUG:
+    import dj_database_url
+
+    DATABASES["default"] = dj_database_url.config(
+        default=env("DATABASE_URL"), conn_max_age=600, conn_health_checks=True
+    )
 
 # Tasks
 TASKS = {"default": {"BACKEND": "django_tasks.backends.database.DatabaseBackend"}}
