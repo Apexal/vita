@@ -1,0 +1,38 @@
+{% load django_bootstrap5 %}
+<div>
+  <div class="d-flex justify-content-between align-items-center mb-3 px-3">
+    <button type="button"
+            class="btn btn-sm btn-primary"
+            hx-get="{% url 'tag_add' %}"
+            hx-target="#tag-offcanvas-body"
+            hx-swap="innerHTML">New tag</button>
+  </div>
+  <div class="px-3">
+    {% if saved %}<div class="alert alert-success py-2">Tag saved.</div>{% endif %}
+  </div>
+  <div class="list-group list-group-flush">
+    {% for tag in tags %}
+      <button type="button"
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+              hx-get="{% url 'tag_detail' tag.id %}"
+              hx-target="#tag-offcanvas-body"
+              hx-swap="innerHTML">
+        <div class="d-flex align-items-center gap-2">
+          {% if tag.color %}
+            <span class="d-inline-block rounded-pill"
+                  style="width:12px;
+                         height:12px;
+                         background:{{ tag.color }}"></span>
+          {% endif %}
+          <div>
+            <div class="fw-semibold">{{ tag.name }}</div>
+            <div class="text-muted small">{{ tag.task_count }} tasks</div>
+          </div>
+        </div>
+        <span class="text-muted small">Edit</span>
+      </button>
+    {% empty %}
+      <div class="p-3 text-muted small">No tags yet.</div>
+    {% endfor %}
+  </div>
+</div>

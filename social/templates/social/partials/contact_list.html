@@ -1,5 +1,0 @@
-{% for contact in contacts %}
-    {% include "social/partials/contact_row.html" with contact=contact active_contact=active_contact %}
-{% empty %}
-    <div class="p-3 text-muted small">No contacts yet.</div>
-{% endfor %}

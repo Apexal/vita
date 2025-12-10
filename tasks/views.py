@@ -6,10 +6,12 @@ from django.db import models
 from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from django.urls import reverse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from core.views import HttpRequest
 from tasks.models import Task
-from tasks.models import Comment
+from tasks.models import Comment, Project, Tag
 
 BOARD_STATUSES = [
     (Task.Status.TODO, "To do"),
@@ -20,7 +22,71 @@ BOARD_STATUSES = [
 
 
 def task_board(request: HttpRequest):
-    return render(request, "tasks/board.html", _fetch_board_context())
+    form = TaskForm()
+    return render(
+        request,
+        "tasks/board.html",
+        {
+            **_fetch_board_context(),
+            "form": form,
+            "open_tags": bool(request.GET.get("show_tags")),
+            "open_projects": bool(request.GET.get("show_projects")),
+        },
+    )
+
+
+def task_list(request: HttpRequest):
+    sort = request.GET.get("sort") or "created"
+    direction = request.GET.get("dir") or "desc"
+    sort_map = {
+        "title": "title",
+        "project": "project__name",
+        "status": "status",
+        "priority": "priority",
+        "due": "due_at",
+        "updated": "updated_at",
+        "created": "created_at",
+    }
+    sort_field = sort_map.get(sort, "created_at")
+    if direction == "asc":
+        ordering = sort_field
+    else:
+        ordering = f"-{sort_field}"
+
+    tasks_qs = (
+        Task.objects.select_related("project", "parent")
+        .prefetch_related("tags")
+        .order_by(ordering)
+    )
+    paginator = Paginator(tasks_qs, 25)
+    page = request.GET.get("page") or 1
+    try:
+        tasks_page = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage):
+        tasks_page = paginator.page(1)
+
+    return render(
+        request,
+        "tasks/task_list.html",
+        {
+            "page_obj": tasks_page,
+            "paginator": paginator,
+            "tasks": tasks_page.object_list,
+            "sort": sort,
+            "direction": direction,
+        },
+    )
+
+
+def board_fragment(request: HttpRequest):
+    """
+    Return just the board partial for HTMX refreshes.
+    """
+    return render(
+        request,
+        "tasks/partials/board.html",
+        {**_fetch_board_context()},
+    )
 
 
 @require_POST
@@ -58,6 +124,48 @@ def move_task(request: HttpRequest):
     )
 
 
+@require_POST
+def create_task(request: HttpRequest):
+    form = TaskForm(request.POST)
+    if form.is_valid():
+        task = form.save(commit=False)
+        max_order = (
+            Task.objects.filter(status=task.status).aggregate(
+                max_order=models.Max("order")
+            )["max_order"]
+            or 0
+        )
+        task.order = max_order + 1
+        task.save()
+        form.save_m2m()
+        context = {
+            **_fetch_board_context(),
+            "form": TaskForm(),
+            "saved": True,
+            "swap_board": True,
+        }
+        template = (
+            "tasks/partials/add_task_form.html" if request.htmx else "tasks/board.html"
+        )
+        return render(request, template, context, status=201)
+
+    context = {
+        **_fetch_board_context(),
+        "form": form,
+        "saved": False,
+        "swap_board": request.htmx,
+    }
+    template = (
+        "tasks/partials/add_task_form.html" if request.htmx else "tasks/board.html"
+    )
+    return render(
+        request,
+        template,
+        context,
+        status=400 if form.errors else 200,
+    )
+
+
 # Helper functions
 def _fetch_board_context():
     cutoff = timezone.now() - timedelta(days=14)
@@ -67,7 +175,7 @@ def _fetch_board_context():
             models.Q(status=Task.Status.DONE, completed_at__gte=cutoff)
             | ~models.Q(status=Task.Status.DONE)
         )
-        .select_related("parent")
+        .select_related("parent", "project")
         .prefetch_related("tags")
         .order_by("order", "-priority", "due_at", "-created_at")
     )
@@ -91,6 +199,7 @@ class TaskForm(forms.ModelForm):
             "title",
             "description",
             "status",
+            "project",
             "priority",
             "energy",
             "due_at",
@@ -180,6 +289,233 @@ def edit_task(request: HttpRequest, task_id: int):
             "task": task,
             "saved": False,
             "comment_form": comment_form,
+        },
+        status=400 if form.errors else 200,
+    )
+
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ["name", "description", "is_active", "tags"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "What is this project about?",
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        widget = self.fields["tags"].widget
+        css = widget.attrs.get("class", "")
+        widget.attrs["class"] = f"{css} form-select".strip()
+
+
+def project_list(request: HttpRequest):
+    projects = Project.objects.order_by("-is_active", "name").prefetch_related("tags")
+    form = ProjectForm()
+    if not request.htmx:
+        return redirect(f"{reverse('task_board')}?show_projects=1")
+    return render(
+        request,
+        "tasks/partials/project_offcanvas_list.html",
+        {"projects": projects, "form": form},
+    )
+
+
+def create_project(request: HttpRequest):
+    projects = Project.objects.order_by("-is_active", "name").prefetch_related("tags")
+    if request.method == "GET":
+        if not request.htmx:
+            return redirect(f"{reverse('task_board')}?show_projects=1")
+        return render(
+            request,
+            "tasks/partials/project_offcanvas_create.html",
+            {"form": ProjectForm()},
+        )
+
+    form = ProjectForm(request.POST)
+    if form.is_valid():
+        form.save()
+        if not request.htmx:
+            return redirect(f"{reverse('task_board')}?show_projects=1")
+        projects = Project.objects.order_by("-is_active", "name").prefetch_related("tags")
+        return render(
+            request,
+            "tasks/partials/project_offcanvas_list.html",
+            {"projects": projects, "form": ProjectForm(), "saved": True},
+            status=201,
+        )
+
+    if not request.htmx:
+        return redirect(f"{reverse('task_board')}?show_projects=1")
+    return render(
+        request,
+        "tasks/partials/project_offcanvas_create.html",
+        {"form": form},
+        status=400 if form.errors else 200,
+    )
+
+
+def project_detail(request: HttpRequest, project_id: int):
+    project = get_object_or_404(
+        Project.objects.prefetch_related("tags").prefetch_related(
+            models.Prefetch(
+                "tasks",
+                queryset=Task.objects.select_related("project").prefetch_related("tags"),
+            )
+        ),
+        pk=project_id,
+    )
+    tasks_qs = project.tasks.all()
+    board_context = _fetch_board_context() if request.htmx else None
+    if request.method == "POST":
+        form = ProjectForm(request.POST, instance=project)
+        if form.is_valid():
+            form.save()
+            if request.htmx:
+                return render(
+                    request,
+                    "tasks/partials/project_offcanvas_detail.html",
+                    {
+                        "form": form,
+                        "project": project,
+                        "tasks": tasks_qs,
+                        "saved": True,
+                        **(board_context or {}),
+                    },
+                )
+            return redirect(f"{reverse('task_board')}?show_projects=1")
+    else:
+        form = ProjectForm(instance=project)
+
+    if not request.htmx:
+        return redirect(f"{reverse('task_board')}?show_projects=1")
+
+    template = "tasks/partials/project_offcanvas_detail.html"
+    context = {
+        "form": form,
+        "project": project,
+        "tasks": tasks_qs,
+        "saved": False,
+        **(board_context or {}),
+    }
+    return render(
+        request,
+        template,
+        context,
+        status=400 if form.errors else 200,
+    )
+
+
+class TagForm(forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = ["name", "color"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "color": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "#RRGGBB (optional)"}
+            ),
+        }
+
+
+def tag_list(request: HttpRequest):
+    tags = Tag.objects.annotate(task_count=models.Count("tasks")).order_by("name")
+    form = TagForm()
+    if not request.htmx:
+        return redirect(f"{reverse('task_board')}?show_tags=1")
+    return render(
+        request,
+        "tasks/partials/tag_offcanvas_list.html",
+        {"tags": tags, "form": form},
+    )
+
+
+def create_tag(request: HttpRequest):
+    tags = Tag.objects.annotate(task_count=models.Count("tasks")).order_by("name")
+    if request.method == "GET":
+        if not request.htmx:
+            return redirect(f"{reverse('task_board')}?show_tags=1")
+        return render(
+            request,
+            "tasks/partials/tag_offcanvas_create.html",
+            {"form": TagForm()},
+        )
+
+    form = TagForm(request.POST)
+    if form.is_valid():
+        form.save()
+        if not request.htmx:
+            return redirect(f"{reverse('task_board')}?show_tags=1")
+        tags = Tag.objects.annotate(task_count=models.Count("tasks")).order_by("name")
+        return render(
+            request,
+            "tasks/partials/tag_offcanvas_list.html",
+            {"tags": tags, "form": TagForm(), "saved": True},
+            status=201,
+        )
+
+    if not request.htmx:
+        return redirect(f"{reverse('task_board')}?show_tags=1")
+    return render(
+        request,
+        "tasks/partials/tag_offcanvas_create.html",
+        {"form": form},
+        status=400 if form.errors else 200,
+    )
+
+
+def tag_detail(request: HttpRequest, tag_id: int):
+    tag = get_object_or_404(
+        Tag.objects.annotate(task_count=models.Count("tasks")),
+        pk=tag_id,
+    )
+    tasks_qs = (
+        Task.objects.filter(tags=tag)
+        .select_related("project")
+        .prefetch_related("tags")
+        .order_by("status", "-priority", "due_at", "-created_at")
+    )
+    board_context = _fetch_board_context() if request.htmx else None
+    if request.method == "POST":
+        form = TagForm(request.POST, instance=tag)
+        if form.is_valid():
+            form.save()
+            if request.htmx:
+                return render(
+                    request,
+                    "tasks/partials/tag_offcanvas_detail.html",
+                    {
+                        "form": form,
+                        "tag": tag,
+                        "tasks": tasks_qs,
+                        "saved": True,
+                        **(board_context or {}),
+                    },
+                )
+            return redirect(f"{reverse('task_board')}?show_tags=1")
+    else:
+        form = TagForm(instance=tag)
+
+    if not request.htmx:
+        return redirect(f"{reverse('task_board')}?show_tags=1")
+
+    template = "tasks/partials/tag_offcanvas_detail.html"
+    return render(
+        request,
+        template,
+        {
+            "form": form,
+            "tag": tag,
+            "tasks": tasks_qs,
+            "saved": False,
+            **(board_context or {}),
         },
         status=400 if form.errors else 200,
     )

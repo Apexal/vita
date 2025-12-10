@@ -1,6 +1,7 @@
 <div id="kanban-board"
      class="d-flex gap-3 flex-nowrap overflow-auto"
-     data-move-url="{% url 'task_move' %}">
+  data-move-url="{% url 'task_move' %}"
+  {% if swap_oob %}hx-swap-oob="outerHTML:#kanban-board"{% endif %}>
     {% if error %}
         <div class="col-12">
             <div class="alert alert-danger mb-0">{{ error }}</div>
@@ -90,6 +91,18 @@
                                                 <path d="M12.75 7.5h-1.5v5l4 2.4.75-1.22-3.25-1.96Z" fill="currentColor" />
                                             </svg>
                                             {{ task.estimate_minutes }}m
+                                        </span>
+                                    {% endif %}
+                                    {% if task.project %}
+                                        <span class="badge bg-light border text-dark d-inline-flex align-items-center gap-1">
+                                            <svg width="12"
+                                                 height="12"
+                                                 viewBox="0 0 16 16"
+                                                 aria-hidden="true"
+                                                 focusable="false">
+                                                <path d="M2 3.5a1.5 1.5 0 0 1 1.5-1.5h9A1.5 1.5 0 0 1 14 3.5V12a1 1 0 0 1-1 1h-2.5L8 15.5 5.5 13H3a1 1 0 0 1-1-1Z" fill="currentColor" />
+                                            </svg>
+                                            {{ task.project.name }}
                                         </span>
                                     {% endif %}
                                     {% for tag in task.tags.all %}

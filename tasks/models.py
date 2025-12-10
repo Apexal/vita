@@ -116,6 +116,14 @@ class Task(TimestampedModel):
         blank=True,
         help_text="When the task was completed.",
     )
+    project = models.ForeignKey(
+        Project,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="tasks",
+        help_text="Project this task belongs to.",
+    )
     parent = models.ForeignKey(
         "self",
         null=True,

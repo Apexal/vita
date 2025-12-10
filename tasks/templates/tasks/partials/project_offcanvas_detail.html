@@ -1,0 +1,66 @@
+{% load django_bootstrap5 %}
+<div class="p-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <button type="button"
+              class="btn btn-sm btn-outline-secondary"
+              hx-get="{% url 'project_list' %}"
+              hx-target="#project-offcanvas-body"
+              hx-swap="innerHTML">&larr; Back</button>
+      <h6 class="mb-0">{{ project.name }}</h6>
+    </div>
+    {% if saved %}<span class="text-success small">Saved</span>{% endif %}
+  </div>
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <form method="post"
+            class="d-flex flex-column gap-3"
+            hx-post="{% url 'project_detail' project.id %}"
+            hx-target="#project-offcanvas-body"
+            hx-swap="innerHTML">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <div class="text-end">
+          <button type="submit" class="btn btn-primary btn-sm">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Tasks</span>
+      <span class="badge bg-secondary">{{ tasks|length }}</span>
+    </div>
+    <div class="list-group list-group-flush">
+      {% for task in tasks %}
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+           href="{% url 'edit_task' task.id %}">
+          <div>
+            <div class="fw-semibold">{{ task.title }}</div>
+            {% if task.description %}<div class="text-muted small">{{ task.description|truncatechars:120 }}</div>{% endif %}
+            <div class="d-flex flex-wrap gap-2 mt-1 align-items-center">
+              <span class="badge bg-light text-dark border">{{ task.get_status_display }}</span>
+              <span class="badge bg-light text-dark border">{{ task.get_priority_display }}</span>
+              <span class="badge bg-light text-dark border">{{ task.get_energy_display }}</span>
+              {% if task.due_at %}<span class="badge bg-warning text-dark">Due {{ task.due_at|date:"M j" }}</span>{% endif %}
+              {% for tag in task.tags.all %}<span class="badge bg-light text-dark border">{{ tag.name }}</span>{% endfor %}
+            </div>
+          </div>
+          <div class="text-end">
+            <span class="text-muted small">{{ task.created_at|date:"M j, Y" }}</span>
+          </div>
+        </a>
+      {% empty %}
+        <div class="p-3 text-muted small">No tasks for this project yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% if columns %}
+  {% include "tasks/partials/board.html" with swap_oob=True columns=columns dropped_task_pk=None %}
+{% endif %}
+<div hx-get="{% url 'task_board_fragment' %}"
+     hx-target="#kanban-board"
+     hx-swap="outerHTML"
+     hx-trigger="load"
+     style="display:none"></div>
