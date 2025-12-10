@@ -17,12 +17,14 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 admin.site.site_header = "Vita Admin"
 admin.site.site_title = "Vita Admin Portal"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", RedirectView.as_view(pattern_name="task_board", permanent=False)),
     path("", include("social.urls")),
     path("tasks/", include("tasks.urls")),
     path("__reload__/", include("django_browser_reload.urls")),

@@ -17,13 +17,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def env(key, default=None):
+def env(key, default: str | None = None) -> str:
     val = os.getenv(key, default)
     if val is None and default is None:
         raise KeyError(
             f"Environment variable '{key}' not found and no default value provided."
         )
-    return val
+    if val:
+        return val
+
+    return default
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -33,13 +36,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-xdt_l-+09$0h5wltuks!pqk(r53^m*di5#g6=+=25d)lh-jg++"
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env("ALLOWED_HOSTS", "localhost,127.0.0.1,.fly.dev").split(",")
 
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS", "https://*.fly.dev").split(",")
 
 # Application definition
 
@@ -52,7 +56,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_bootstrap5",
     "django_htmx",
-    "django_browser_reload",
+    "django_tasks",
+    "django_tasks.backends.database",
     "core",
     "tasks",
     "health",
@@ -61,8 +66,10 @@ INSTALLED_APPS = [
     "notifications",
 ]
 
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -70,8 +77,16 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
-    "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
+
+if DEBUG:
+    INSTALLED_APPS += [
+        "django_browser_reload",
+    ]
+    MIDDLEWARE += [
+        "django_browser_reload.middleware.BrowserReloadMiddleware",
+    ]
+
 
 ROOT_URLCONF = "vita.urls"
 
@@ -102,6 +117,9 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# Tasks
+TASKS = {"default": {"BACKEND": "django_tasks.backends.database.DatabaseBackend"}}
 
 
 # Password validation
@@ -139,6 +157,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Email
 
