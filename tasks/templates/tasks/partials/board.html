@@ -1,7 +1,7 @@
 <div id="kanban-board"
      class="d-flex gap-3 flex-nowrap overflow-auto"
-  data-move-url="{% url 'task_move' %}"
-  {% if swap_oob %}hx-swap-oob="outerHTML:#kanban-board"{% endif %}>
+     data-move-url="{% url 'task_move' %}"
+     {% if swap_oob %}hx-swap-oob="outerHTML:#kanban-board"{% endif %}>
     {% if error %}
         <div class="col-12">
             <div class="alert alert-danger mb-0">{{ error }}</div>
@@ -106,16 +106,15 @@
                                         </span>
                                     {% endif %}
                                     {% for tag in task.tags.all %}
-                                        <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
-                                            <svg width="12"
-                                                 height="12"
-                                                 viewBox="0 0 16 16"
-                                                 aria-hidden="true"
-                                                 focusable="false">
-                                                <path d="M2 5.5 8 1l6 4.5V14a1 1 0 0 1-1 1h-2.5a1 1 0 0 1-1-1V9H6.5v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1Z" fill="currentColor" />
-                                            </svg>
-                                            {{ tag.name }}
-                                        </span>
+                                        {% with dot_color=tag.color|default:"#6c757d" %}
+                                            <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                                                <span class="rounded-circle d-inline-block"
+                                                      style="width:7px;
+                                                             height:7px;
+                                                             background:{{ dot_color }}"></span>
+                                                {{ tag.name }}
+                                            </span>
+                                        {% endwith %}
                                     {% endfor %}
                                 </div>
                                 <a href="{% url 'edit_task' task.id %}"

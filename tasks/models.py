@@ -10,9 +10,8 @@ class Tag(TimestampedModel):
         help_text="Label name.",
     )
     color = models.CharField(
-        max_length=7,
         blank=True,
-        help_text="Optional hex color for UI accents.",
+        help_text="Optional CSS color name for UI accents.",
     )
 
     class Meta:
