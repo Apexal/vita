@@ -1,0 +1,144 @@
+{% if contact %}
+    <div class="d-flex flex-column gap-3"
+         data-active-contact="{{ contact.slug }}">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-uppercase text-muted small mb-1">Contact</p>
+                        <h2 class="h4 mb-1">{{ contact.name }}</h2>
+                        <div class="text-muted small">
+                            {{ contact.get_relationship_to_me_display }}
+                            {% if contact.timezone %}• {{ contact.timezone }}{% endif %}
+                        </div>
+                        {% if contact.interests.all %}
+                            <div class="mt-2 d-flex flex-wrap gap-1">
+                                {% for interest in contact.interests.all %}
+                                    <span class="badge bg-light text-dark border">{{ interest.name }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-{{ contact.strength.state }} px-3 py-2">{{ contact.strength.label }}</span>
+                        <div class="text-muted small mt-1">Score {{ contact.strength.score }}/100</div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-{{ contact.strength.state }}"
+                             role="progressbar"
+                             style="width: {{ contact.strength.score }}%"
+                             aria-valuenow="{{ contact.strength.score }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3 small text-muted mt-2">
+                        <span>Cadence: every {{ contact.check_in_frequency_days }} days</span>
+                        <span>
+                            {% if contact.strength.last_touchpoint %}
+                                Last touch {{ contact.strength.last_touchpoint|date:"M j" }}
+                            {% else %}
+                                No touchpoints yet
+                            {% endif %}
+                        </span>
+                        <span>
+                            {% if contact.strength.overdue_by %}
+                                Overdue by {{ contact.strength.overdue_by }} days
+                            {% elif contact.strength.next_due_in is not None %}
+                                Next due in {{ contact.strength.next_due_in }} days
+                            {% endif %}
+                        </span>
+                        <span>{{ contact.strength.touchpoints_recent }} touchpoints in last 90 days</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Quick add touchpoint</span>
+                {% if saved %}<span class="text-success small">Saved!</span>{% endif %}
+            </div>
+            <div class="card-body">
+                <form hx-post="{% url 'touchpoint_add' %}"
+                      hx-target="#contact-detail"
+                      hx-swap="innerHTML">
+                    {% csrf_token %}
+                    {{ form.contact }}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Date</label>
+                            {{ form.date }}
+                            {% for error in form.date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Channel</label>
+                            {{ form.channel }}
+                            {% for error in form.channel.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Sentiment</label>
+                            {{ form.sentiment }}
+                            {% for error in form.sentiment.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            {{ form.notes }}
+                            {% for error in form.notes.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger mt-3 mb-2">
+                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-primary">Log touchpoint</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Touchpoints</span>
+                <span class="badge bg-secondary">{{ touchpoints|length }}</span>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for tp in touchpoints %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-light text-dark border">{{ tp.get_channel_display }}</span>
+                                    {% if tp.sentiment %}<span class="badge bg-light text-dark border">{{ tp.get_sentiment_display }}</span>{% endif %}
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    {% if tp.notes %}
+                                        {{ tp.notes|truncatechars:140 }}
+                                    {% else %}
+                                        No notes
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted small">{{ tp.date|date:"M j, Y" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="p-3 text-muted small">No touchpoints yet. Log one above.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p class="mb-1 fw-semibold">No contacts</p>
+            <p class="text-muted mb-0 small">Add a contact to start logging touchpoints.</p>
+        </div>
+    </div>
+{% endif %}
+{% if swap_contact_row and contact %}
+    {% include "social/partials/contact_row.html" with contact=contact active_contact=contact swap_oob=True %}
+{% endif %}

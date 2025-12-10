@@ -1,3 +1,55 @@
 from django.contrib import admin
 
-# Register your models here.
+from social.models import (
+    Contact,
+    ContactRelationship,
+    ContactTouchpoint,
+    Interest,
+)
+
+
+class ContactTouchpointInline(admin.TabularInline):
+    model = ContactTouchpoint
+    extra = 0
+    fields = ("date", "channel", "sentiment", "notes")
+    readonly_fields = ()
+    ordering = ("-date",)
+
+
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "relationship_to_me",
+        "priority",
+        "check_in_frequency_days",
+        "last_contacted_at",
+    )
+    list_filter = ("relationship_to_me", "priority", "preferred_channel")
+    search_fields = ("name", "notes")
+    prepopulated_fields = {"slug": ("name",)}
+    inlines = [ContactTouchpointInline]
+
+
+@admin.register(ContactTouchpoint)
+class ContactTouchpointAdmin(admin.ModelAdmin):
+    list_display = ("contact", "date", "channel", "sentiment")
+    list_filter = ("channel", "sentiment")
+    date_hierarchy = "date"
+    search_fields = ("contact__name", "notes")
+    autocomplete_fields = ("contact",)
+
+
+@admin.register(ContactRelationship)
+class ContactRelationshipAdmin(admin.ModelAdmin):
+    list_display = ("from_contact", "to_contact", "relationship_type", "updated_at")
+    list_filter = ("relationship_type",)
+    search_fields = ("from_contact__name", "to_contact__name")
+    autocomplete_fields = ("from_contact", "to_contact")
+
+
+@admin.register(Interest)
+class InterestAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug", "created_at")
+    search_fields = ("name", "description")
+    prepopulated_fields = {"slug": ("name",)}

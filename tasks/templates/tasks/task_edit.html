@@ -1,13 +1,10 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container py-4">
-  <div class="mb-3">
-    <a href="{% url 'task_board' %}" class="text-decoration-none">&larr; Back to board</a>
-  </div>
-  {% include "tasks/partials/task_form_card.html" %}
-  <div id="task-comments">
-    {% include "tasks/partials/task_comments.html" %}
-  </div>
-</div>
-{% endblock %}
+    <div class="container py-4">
+        <div class="mb-3">
+            <a href="{% url 'task_board' %}" class="text-decoration-none">← Back to board</a>
+        </div>
+        {% include "tasks/partials/task_form_card.html" %}
+        <div id="task-comments">{% include "tasks/partials/task_comments.html" %}</div>
+    </div>
+{% endblock content %}

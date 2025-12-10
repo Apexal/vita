@@ -1,76 +1,70 @@
 <div class="card shadow-sm" id="task-form-card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <div>
-      <p class="text-uppercase text-muted small mb-0">Task</p>
-      <h2 class="h5 mb-0">{{ task.title }}</h2>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <p class="text-uppercase text-muted small mb-0">Task</p>
+            <h2 class="h5 mb-0">{{ task.title }}</h2>
+        </div>
     </div>
-  </div>
-  <div class="card-body">
-    {% if saved %}
-      <div class="alert alert-success py-2 mb-3">Task saved.</div>
-    {% endif %}
-    <form
-      id="task-form"
-      method="post"
-      action="{% url 'edit_task' task.id %}"
-      hx-post="{% url 'edit_task' task.id %}"
-      hx-target="#task-form-card"
-      hx-swap="outerHTML"
-    >
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-      {% endif %}
-      <div class="row g-3">
-        <div class="col-12">
-          <label class="form-label" for="{{ form.title.id_for_label }}">Title</label>
-          {{ form.title }}
-          {{ form.title.errors }}
-        </div>
-        <div class="col-12">
-          <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
-          {{ form.description }}
-          {{ form.description.errors }}
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
-          {{ form.status }}
-          {{ form.status.errors }}
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="{{ form.priority.id_for_label }}">Priority</label>
-          {{ form.priority }}
-          {{ form.priority.errors }}
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="{{ form.energy.id_for_label }}">Energy</label>
-          {{ form.energy }}
-          {{ form.energy.errors }}
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="{{ form.due_at.id_for_label }}">Due date</label>
-          {{ form.due_at }}
-          {{ form.due_at.errors }}
-        </div>
-        <div class="col-md-4">
-          <label class="form-label" for="{{ form.estimate_minutes.id_for_label }}">Estimate (minutes)</label>
-          {{ form.estimate_minutes }}
-          {{ form.estimate_minutes.errors }}
-        </div>
-        <div class="col-md-8">
-          <label class="form-label" for="{{ form.parent.id_for_label }}">Parent task</label>
-          {{ form.parent }}
-          {{ form.parent.errors }}
-        </div>
-        <div class="col-12">
-          <label class="form-label" for="{{ form.tags.id_for_label }}">Tags</label>
-          {{ form.tags }}
-          {{ form.tags.errors }}
-        </div>
-      </div>
-      <div class="d-flex justify-content-end gap-2 mt-4">
-        <a class="btn btn-outline-secondary" href="{% url 'task_board' %}">Cancel</a>
-        <button type="submit" class="btn btn-primary">Save</button>
-      </div>
-    </form>
-  </div>
+    <div class="card-body">
+        {% if saved %}<div class="alert alert-success py-2 mb-3">Task saved.</div>{% endif %}
+        <form id="task-form"
+              method="post"
+              action="{% url 'edit_task' task.id %}"
+              hx-post="{% url 'edit_task' task.id %}"
+              hx-target="#task-form-card"
+              hx-swap="outerHTML">
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.title.id_for_label }}">Title</label>
+                    {{ form.title }}
+                    {{ form.title.errors }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
+                    {{ form.description }}
+                    {{ form.description.errors }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+                    {{ form.status }}
+                    {{ form.status.errors }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.priority.id_for_label }}">Priority</label>
+                    {{ form.priority }}
+                    {{ form.priority.errors }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.energy.id_for_label }}">Energy</label>
+                    {{ form.energy }}
+                    {{ form.energy.errors }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.due_at.id_for_label }}">Due date</label>
+                    {{ form.due_at }}
+                    {{ form.due_at.errors }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="{{ form.estimate_minutes.id_for_label }}">Estimate (minutes)</label>
+                    {{ form.estimate_minutes }}
+                    {{ form.estimate_minutes.errors }}
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="{{ form.parent.id_for_label }}">Parent task</label>
+                    {{ form.parent }}
+                    {{ form.parent.errors }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="{{ form.tags.id_for_label }}">Tags</label>
+                    {{ form.tags }}
+                    {{ form.tags.errors }}
+                </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a class="btn btn-outline-secondary" href="{% url 'task_board' %}">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
 </div>

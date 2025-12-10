@@ -1,20 +1,15 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container-fluid py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <p class="text-uppercase text-muted small mb-1">Tasks</p>
-      <h1 class="h3 mb-0">Kanban Board</h1>
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <p class="text-uppercase text-muted small mb-1">Tasks</p>
+                <h1 class="h3 mb-0">Kanban Board</h1>
+            </div>
+        </div>
+        {% include "tasks/partials/board.html" %}
     </div>
-  </div>
-
-  {% include "tasks/partials/board.html" %}
-</div>
-
-
-
-<script>
+    <script>
   let boardScrollLeft = 0;
 
   const initKanbanDragAndDrop = () => {
@@ -80,9 +75,8 @@
   });
 
   document.addEventListener("DOMContentLoaded", initKanbanDragAndDrop);
-</script>
-
-<style>
+    </script>
+    <style>
   @keyframes popIn {
     0% {
       transform: scale(0.95);
@@ -154,5 +148,5 @@
     background: #fdecea;
     color: #c92a2a;
   }
-</style>
-{% endblock %}
+    </style>
+{% endblock content %}
