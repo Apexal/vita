@@ -5,7 +5,6 @@
     <div class="card shadow-sm">
       <div class="card-body">
         <h1 class="h4 mb-3 text-center">Sign in</h1>
-        {% if form.errors %}<div class="alert alert-danger">Invalid credentials. Please try again.</div>{% endif %}
         <form method="post" novalidate>
           {% csrf_token %}
           {% bootstrap_form form %}
