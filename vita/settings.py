@@ -89,6 +89,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
+    "core.middleware.SuperuserRequiredMiddleware",
 ]
 
 if DEBUG:
@@ -191,3 +192,7 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 RESEND_SMTP_PORT = 587
 RESEND_SMTP_USERNAME = "resend"
 RESEND_SMTP_HOST = "smtp.resend.com"
+
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"

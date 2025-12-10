@@ -23,9 +23,15 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#">Vita - Frank OS</a>
-                <div class="navbar-nav">
+                <div class="navbar-nav me-auto">
                     <a class="nav-link" href="{% url 'task_board' %}">Tasks</a>
                     <a class="nav-link" href="#">Inbox</a>
+                </div>
+                <div class="navbar-nav">
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link nav-link text-white">Logout</button>
+                    </form>
                 </div>
             </div>
         </nav>

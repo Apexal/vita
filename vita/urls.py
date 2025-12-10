@@ -24,6 +24,7 @@ admin.site.site_title = "Vita Admin Portal"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),
     path("", RedirectView.as_view(pattern_name="task_board", permanent=False)),
     path("", include("social.urls")),
     path("tasks/", include("tasks.urls")),
