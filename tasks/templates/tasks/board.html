@@ -290,9 +290,12 @@
         column.classList.add("drop-received");
         setTimeout(() => column.classList.remove("drop-received"), 180);
         htmx.ajax("POST", moveUrl, {
-          target: "#kanban-board",
-          swap: "outerHTML",
           values: { task_id: taskId, status },
+        }).then(() => {
+          document.body.dispatchEvent(new CustomEvent("task-updated", {
+            detail: { task_id: parseInt(taskId) },
+            bubbles: true
+          }));
         });
       };
     });
@@ -313,11 +316,13 @@
         stopAutoScroll();
         const taskId = event.dataTransfer.getData("text/plain");
         if (!taskId) return;
-        console.log("Cancelling task", taskId);
         htmx.ajax("POST", moveUrl, {
-          target: "#kanban-board",
-          swap: "outerHTML",
           values: { task_id: taskId, status: targetStatus },
+        }).then(() => {
+          document.body.dispatchEvent(new CustomEvent("task-updated", {
+            detail: { task_id: parseInt(taskId) },
+            bubbles: true
+          }));
         });
       };
     });
