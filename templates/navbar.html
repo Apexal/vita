@@ -1,127 +1,67 @@
-{% if user.is_authenticated %}
-    <nav class="navbar navbar-expand navbar-dark bg-dark z-100 no-print d-none d-lg-flex">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Vita</a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link" href="{% url 'day_overview' %}">Today</a>
-                <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle"
-                       href="#"
-                       role="button"
-                       data-bs-toggle="dropdown"
-                       aria-expanded="false">Tasks</a>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item" href="{% url 'catch_up' %}">Catch Up</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{% url 'task_board' %}">Board</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{% url 'task_checklist' %}">Checklist</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{% url 'task_backlog' %}">Backlog</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{% url 'task_velocity' %}">Velocity</a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{% url 'routine_list' %}">Routines</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{% url 'routine_schedule' %}">Routine Schedule</a>
-                        </li>
-                    </ul>
-                </div>
-                <a class="nav-link"
-                   href="{% url 'assistant_chat' %}"
-                   data-assistant-open
-                   data-assistant-focus-input>Assistant</a>
-                <a class="nav-link" href="{% url 'social:index' %}">Social</a>
-                <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
-            </div>
-            <div class="navbar-nav">
-                <form method="post" action="{% url 'logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-link nav-link text-white">Logout</button>
-                </form>
-            </div>
-        </div>
-    </nav>
-    <div class="dropdown position-fixed top-0 start-0 m-2 no-print d-lg-none"
-         style="z-index: 1090">
-        <button class="btn btn-dark btn-sm dropdown-toggle"
+<nav id="top-nav" class="navbar navbar-expand-lg navbar-dark bg-dark z-100 no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Vita</a>
+        <button class="navbar-toggler"
                 type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">Menu</button>
-        <ul class="dropdown-menu">
-            <li>
-                <a class="dropdown-item" href="{% url 'day_overview' %}">Today</a>
-            </li>
-            <li>
-                <hr class="dropdown-divider">
-            </li>
-            <li>
-                <h6 class="dropdown-header">Tasks</h6>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{% url 'catch_up' %}">Catch Up</a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{% url 'task_board' %}">Board</a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{% url 'task_checklist' %}">Checklist</a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{% url 'task_backlog' %}">Backlog</a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{% url 'task_velocity' %}">Velocity</a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{% url 'routine_list' %}">Routines</a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{% url 'routine_schedule' %}">Routine Schedule</a>
-            </li>
-            <li>
-                <hr class="dropdown-divider">
-            </li>
-            <li>
-                <a class="dropdown-item"
-                   href="{% url 'assistant_chat' %}"
-                   data-assistant-open
-                   data-assistant-focus-input>Assistant</a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{% url 'social:index' %}">Social</a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{% url 'admin:index' %}">Admin</a>
-            </li>
-            <li>
-                <hr class="dropdown-divider">
-            </li>
-            <li>
-                <form method="post" action="{% url 'logout' %}" class="px-3">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-link dropdown-item px-0">Logout</button>
-                </form>
-            </li>
-        </ul>
-    </div>
-{% else %}
-    <nav class="navbar navbar-dark bg-dark z-100 no-print">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Vita</a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{% url 'login' %}">Login</a>
-            </div>
+                data-bs-toggle="collapse"
+                data-bs-target="#navbar-collapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbar-collapse">
+            {% if user.is_authenticated %}
+                <div class="navbar-nav me-auto">
+                    <a class="nav-link" href="{% url 'day_overview' %}">Today</a>
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle"
+                           href="#"
+                           role="button"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">Tasks</a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'catch_up' %}">Catch Up</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'task_board' %}">Board</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'task_checklist' %}">Checklist</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'task_backlog' %}">Backlog</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'task_velocity' %}">Velocity</a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'routine_list' %}">Routines</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'routine_schedule' %}">Routine Schedule</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <a class="nav-link"
+                       href="{% url 'assistant_chat' %}"
+                       data-assistant-open
+                       data-assistant-focus-input>Assistant</a>
+                    <a class="nav-link" href="{% url 'social:index' %}">Social</a>
+                    <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
+                </div>
+                <div class="navbar-nav">
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link nav-link text-white">Logout</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                </div>
+            {% endif %}
         </div>
-    </nav>
-{% endif %}
+    </div>
+</nav>

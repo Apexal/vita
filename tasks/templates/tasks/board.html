@@ -2,7 +2,7 @@
 {% load static %}
 {% load django_bootstrap5 %}
 {% block content %}
-  <div class="container-fluid py-4">
+  <div class="container-fluid py-3">
     <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
       <div class="d-none d-md-block">
         <h1 class="h3 mb-0">Tasks</h1>
@@ -13,17 +13,45 @@
                 type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false">Menu</button>
+        
+
         <ul class="dropdown-menu">
-          <li>
-            <a href="{% url 'task_checklist' %}" class="dropdown-item">Checklist</a>
+            <li>
+                <a class="dropdown-item" href="{% url 'day_overview' %}">Today</a>
+            </li>
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+            <li>
+                <h6 class="dropdown-header">Tasks</h6>
+            </li>
+            <li>
+            <a class="dropdown-item"
+               data-bs-toggle="modal"
+               data-bs-target="#addTaskModal">Add task</a>
           </li>
-          <li>
-            <a hx-boost="true" href="{% url 'task_list' %}" class="dropdown-item">All tasks</a>
-          </li>
-          <li>
-            <a hx-boost="true" href="{% url 'task_backlog' %}" class="dropdown-item">Backlog ({{ backlog_count|default:0 }})</a>
-          </li>
-          <li>
+            <li>
+                <a class="dropdown-item" href="{% url 'catch_up' %}">Catch Up</a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'task_board' %}">Board</a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'task_checklist' %}">Checklist</a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'task_backlog' %}">Backlog</a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'task_velocity' %}">Velocity</a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'routine_list' %}">Routines</a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'routine_schedule' %}">Routine Schedule</a>
+            </li>
+            <li>
             <a class="dropdown-item"
                data-bs-toggle="offcanvas"
                data-bs-target="#projectOffcanvas"
@@ -41,11 +69,30 @@
                hx-target="#tag-offcanvas-body"
                hx-swap="innerHTML">Tags</a>
           </li>
-          <li>
-            <a class="dropdown-item"
-               data-bs-toggle="modal"
-               data-bs-target="#addTaskModal">Add task</a>
-          </li>
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+            <li>
+                <a class="dropdown-item"
+                   href="{% url 'assistant_chat' %}"
+                   data-assistant-open
+                   data-assistant-focus-input>Assistant</a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'social:index' %}">Social</a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="{% url 'admin:index' %}">Admin</a>
+            </li>
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+            <li>
+                <form method="post" action="{% url 'logout' %}" class="px-3">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link dropdown-item px-0">Logout</button>
+                </form>
+            </li>
         </ul>
       </div>
       <div class="gap-2 d-none d-lg-flex align-items-center">
@@ -501,15 +548,14 @@
 
   .kanban-column-body {
     overflow: auto;
-    height: calc(100dvh - 255px);
+    height: calc(100dvh - 155px);
   }
   
   @media (min-width: 768px) {
     .kanban-column-body {
-      height: calc(100dvh - 255px);
+      height: calc(100dvh - 250px);
     }
   }
-
 
   /** Cancel card */
   #drop-to-move-cards {
@@ -525,6 +571,10 @@
 
   #drop-to-move-cards.drag-over {
     opacity: 1;
+  }
+
+  #top-nav {
+    display: none;
   }
   </style>
 {% endblock content %}

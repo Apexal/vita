@@ -58,7 +58,7 @@
             {% block content %}
             {% endblock content %}
         </main>
-        {% include "assistant/partials/widget.html" %}
+        {% comment %} {% include "assistant/partials/widget.html" %} {% endcomment %}
         <div class="toast-container position-fixed bottom-0 end-0 p-3">
             <template id="task-toast-template">
                 <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
