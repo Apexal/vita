@@ -2,6 +2,10 @@ body {
   height: 100dvh;
 }
 
+html, body {
+  overscroll-behavior: none;
+}
+
 .only-print {
   display: none;
 }
