@@ -211,6 +211,28 @@
 
   let autoScrollAnimationId = null;
 
+  // Long press on a card marks it done. Keep in sync with the .long-pressing styles below.
+  const LONG_PRESS_DURATION_MS = 600;
+  const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
+  // Past this point the press is no longer a tap: releasing does nothing instead of
+  // opening the task, and the progress bar starts filling to show the press landed.
+  const TAP_MAX_DURATION_MS = 250;
+
+  // Only one card can be pressed at a time. Tracking the pending press here lets a
+  // board refresh (or a release outside the card) cancel it even once the card
+  // element itself has been swapped out from under the finger.
+  let cancelPendingLongPress = null;
+  // Set on release of anything longer than a tap. Module scope so the click is still
+  // swallowed when a completed long press has already swapped the card out.
+  let suppressNextCardClick = false;
+
+  document.addEventListener("pointerup", () => {
+    if (cancelPendingLongPress) cancelPendingLongPress();
+  });
+  document.addEventListener("pointercancel", () => {
+    if (cancelPendingLongPress) cancelPendingLongPress();
+  });
+
   function restoreKanbanColumnScrollPositions() {
     document.querySelectorAll(".kanban-column").forEach((column) => {
       const status = column.dataset.status;
@@ -294,11 +316,48 @@
     const dropToMoveCards = dropToMoveCardsContainer.querySelectorAll(".drop-to-move-card");
     const board = document.getElementById("kanban-board");
     if (!board) return;
+    if (cancelPendingLongPress) cancelPendingLongPress();
 
     const moveUrl = board.dataset.moveUrl;
 
+    const moveTask = (taskId, status) => {
+      if (!taskId || !status) return;
+      htmx.ajax("POST", moveUrl, {
+        values: { task_id: taskId, status },
+      }).then(() => {
+        document.body.dispatchEvent(new CustomEvent("task-updated", {
+          detail: { task_id: parseInt(taskId) },
+          bubbles: true
+        }));
+      });
+    };
+
     board.querySelectorAll("[data-card]").forEach((card) => {
+      let longPressTimer = null;
+      let longPressOrigin = null;
+      let longPressPointerType = null;
+      let longPressStartedAt = 0;
+      let longPressMovedFar = false;
+
+      const cancelLongPress = () => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        longPressOrigin = null;
+        longPressPointerType = null;
+        card.classList.remove("long-pressing");
+        if (cancelPendingLongPress === cancelLongPress) cancelPendingLongPress = null;
+      };
+
       card.ondragstart =  (event) => {
+        // Touch browsers start a native drag partway through a long press,
+        // so let the long press win there and keep dragging to the mouse.
+        if (longPressPointerType && longPressPointerType !== "mouse") {
+          event.preventDefault();
+          return;
+        }
+        cancelLongPress();
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData("text/plain", card.dataset.taskId);
         card.classList.add("dragging");
@@ -314,6 +373,64 @@
           event.preventDefault();
           const target = card.dataset.href;
           if (target) window.location.href = target;
+        }
+      };
+
+      const column = card.closest("[data-column]");
+      if (column && column.dataset.status === "done") return;
+
+      card.onpointerdown = (event) => {
+        if (event.button !== 0) return;
+        if (cancelPendingLongPress) cancelPendingLongPress();
+        cancelPendingLongPress = cancelLongPress;
+        suppressNextCardClick = false;
+        longPressOrigin = { x: event.clientX, y: event.clientY };
+        longPressPointerType = event.pointerType;
+        longPressStartedAt = performance.now();
+        longPressMovedFar = false;
+        card.classList.add("long-pressing");
+        longPressTimer = setTimeout(() => {
+          const taskId = card.dataset.taskId;
+          cancelLongPress();
+          suppressNextCardClick = true;
+          if (navigator.vibrate) navigator.vibrate(30);
+          moveTask(taskId, "done");
+        }, LONG_PRESS_DURATION_MS);
+      };
+      card.onpointermove = (event) => {
+        if (!longPressOrigin) return;
+        const movedFar =
+          Math.abs(event.clientX - longPressOrigin.x) > LONG_PRESS_MOVE_TOLERANCE_PX ||
+          Math.abs(event.clientY - longPressOrigin.y) > LONG_PRESS_MOVE_TOLERANCE_PX;
+        if (movedFar) {
+          longPressMovedFar = true;
+          cancelLongPress();
+        }
+      };
+      card.onpointerup = () => {
+        // Only a quick tap opens the task. Releasing partway through a long press,
+        // or after sliding off the card, should do nothing at all.
+        if (longPressStartedAt) {
+          const heldFor = performance.now() - longPressStartedAt;
+          if (longPressMovedFar || heldFor > TAP_MAX_DURATION_MS) {
+            suppressNextCardClick = true;
+          }
+        }
+        cancelLongPress();
+      };
+      card.onpointercancel = cancelLongPress;
+      card.onpointerleave = cancelLongPress;
+      card.onclick = (event) => {
+        // Swallow the click that follows anything longer than a tap so the card's
+        // stretched link does not open the edit page.
+        if (!suppressNextCardClick) return;
+        suppressNextCardClick = false;
+        event.preventDefault();
+        event.stopPropagation();
+      };
+      card.oncontextmenu = (event) => {
+        if (longPressPointerType && longPressPointerType !== "mouse") {
+          event.preventDefault();
         }
       };
     });
@@ -336,14 +453,7 @@
         if (!taskId || !status) return;
         column.classList.add("drop-received");
         setTimeout(() => column.classList.remove("drop-received"), 180);
-        htmx.ajax("POST", moveUrl, {
-          values: { task_id: taskId, status },
-        }).then(() => {
-          document.body.dispatchEvent(new CustomEvent("task-updated", {
-            detail: { task_id: parseInt(taskId) },
-            bubbles: true
-          }));
-        });
+        moveTask(taskId, status);
       };
     });
 
@@ -362,15 +472,7 @@
         card.classList.remove("drag-over");
         stopAutoScroll();
         const taskId = event.dataTransfer.getData("text/plain");
-        if (!taskId) return;
-        htmx.ajax("POST", moveUrl, {
-          values: { task_id: taskId, status: targetStatus },
-        }).then(() => {
-          document.body.dispatchEvent(new CustomEvent("task-updated", {
-            detail: { task_id: parseInt(taskId) },
-            bubbles: true
-          }));
-        });
+        moveTask(taskId, targetStatus);
       };
     });
     
@@ -508,6 +610,38 @@
   .kanban-card.dragging {
     transition: transform 0.2s ease;
     transform: scale(0.95);
+  }
+
+  /** Long press to complete */
+  #kanban-board .kanban-card {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  #kanban-board .kanban-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    height: 4px;
+    z-index: 3;
+    pointer-events: none;
+    border-radius: 0 0 var(--bs-border-radius) var(--bs-border-radius);
+    background-color: var(--bs-success);
+  }
+
+  /** The delay is TAP_MAX_DURATION_MS, so the bar only shows up once releasing
+      has stopped opening the task. Delay + duration add up to LONG_PRESS_DURATION_MS. */
+  #kanban-board .kanban-card.long-pressing::before {
+    width: 100%;
+    transition: width 350ms linear 250ms;
+  }
+
+  #kanban-board .kanban-card.long-pressing {
+    transform: scale(0.97);
+    transition: transform 350ms ease 250ms;
   }
 
 
