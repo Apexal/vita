@@ -435,7 +435,9 @@ def _build_task_queryset(
     elif not include_done:
         queryset = queryset.exclude(status=TaskStatus.DONE)
     if applied_away_filter:
-        queryset = queryset.filter(routine_step__is_available_away_from_home=True)
+        # exclude() rather than filter() so tasks with no routine step (routine_step
+        # is NULL) are kept, matching the board's behaviour in _fetch_board_context
+        queryset = queryset.exclude(routine_step__is_available_away_from_home=False)
 
     away_context = {
         "is_away_from_home": is_away_from_home,

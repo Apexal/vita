@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Q
 from django.forms import inlineformset_factory
 from django.utils import timezone
 
@@ -66,9 +67,15 @@ class TaskForm(forms.ModelForm):
                 _current_datetime_local_input_max()
             )
 
-        self.fields["parent"].queryset = Task.objects.filter(
-            status__in=[TaskStatus.TODO, TaskStatus.IN_PROGRESS]
-        ).order_by("-created_at")
+        # Keep the currently assigned parent selectable even if it has moved to a
+        # status outside the shortlist, otherwise autosave silently clears the link
+        parent_filter = Q(status__in=[TaskStatus.TODO, TaskStatus.IN_PROGRESS])
+        if self.instance.parent_id:
+            parent_filter |= Q(pk=self.instance.parent_id)
+        parent_queryset = Task.objects.filter(parent_filter)
+        if self.instance.pk:
+            parent_queryset = parent_queryset.exclude(pk=self.instance.pk)
+        self.fields["parent"].queryset = parent_queryset.order_by("-created_at")
         for name in ["priority", "energy", "parent", "tags"]:
             widget = self.fields[name].widget
             css = widget.attrs.get("class", "")

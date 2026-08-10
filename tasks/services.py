@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from calendar import monthrange
 from datetime import date, datetime, time, timedelta
 from typing import List, Optional, cast
 
@@ -36,9 +37,10 @@ def routine_is_due(routine: Routine, target_datetime: datetime) -> bool:
     if target_datetime.time() < anchor_time:
         return False
 
-    # Explicit monthly day
+    # Explicit monthly day, clamped so day 29-31 still fires in short months
     if routine.day_of_month:
-        return target_datetime.day == routine.day_of_month
+        days_in_month = monthrange(target_datetime.year, target_datetime.month)[1]
+        return target_datetime.day == min(routine.day_of_month, days_in_month)
 
     # Day-of-week schedule
     if routine.days_of_week:
@@ -86,9 +88,14 @@ def generate_tasks_for_date(
             ).exists():
                 continue
 
+            # Skip home-only steps while away before retiring anything, so we never
+            # cancel an open task without creating its replacement
+            if not step.is_available_away_from_home and is_on_trip:
+                continue
+
             # If task is not stackable, cancel any existing uncompleted tasks for this step before creating a new one
             if not step.is_stackable:
-                Task.objects.filter(
+                stale_tasks = Task.objects.filter(
                     routine=routine,
                     routine_step=step,
                     status__in=[
@@ -97,10 +104,12 @@ def generate_tasks_for_date(
                         TaskStatus.IN_PROGRESS,
                         TaskStatus.BLOCKED,
                     ],
-                ).update(status=TaskStatus.MISSED)
-
-            if not step.is_available_away_from_home and is_on_trip:
-                continue
+                )
+                # Saved one at a time rather than bulk-updated so status_last_changed_at
+                # is stamped and the task-updated event fires
+                for stale_task in stale_tasks:
+                    stale_task.status = TaskStatus.MISSED
+                    stale_task.save()
 
             task = Task.objects.create(
                 title=step.title,

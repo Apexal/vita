@@ -122,6 +122,8 @@ def edit_task(request: HttpRequest, task_id: int):
     template = (
         "tasks/partials/task_form_card.html" if request.htmx else "tasks/task_edit.html"
     )
+    # Re-rendered forms return 200 so htmx swaps them in; its default
+    # responseHandling discards 4xx bodies, which would hide the errors
     return render(
         request,
         template,
@@ -131,7 +133,6 @@ def edit_task(request: HttpRequest, task_id: int):
             "saved": False,
             "comment_form": comment_form,
         },
-        status=400 if form.errors else 200,
     )
 
 
@@ -160,11 +161,12 @@ def prompt_task_completion_time(request: HttpRequest, task_id: int):
         )
         form = TaskCompletionTimeForm(initial={"completed_at": initial_completed_at})
 
+    # Re-rendered forms return 200 so htmx swaps them in; its default
+    # responseHandling discards 4xx bodies, which would hide the errors
     return render(
         request,
         "tasks/prompt_task_completion_time.html",
         {"task": task, "form": form},
-        status=400 if form.errors else 200,
     )
 
 
@@ -178,6 +180,12 @@ def clone_task(request: HttpRequest, task_id: int):
     task.status = TaskStatus.TODO
     task.completed_at = None
     task.status_last_changed_at = None
+    # A clone is a standalone task: keeping the routine linkage would make it count
+    # as a second occurrence of the same step on the same date
+    task.routine = None
+    task.routine_step = None
+    task.routine_date = None
+    task.promoted_from_routine = False
     task.created_at = timezone.now()
     task.updated_at = timezone.now()
     task.save()

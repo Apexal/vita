@@ -184,12 +184,9 @@ class QuickAddTaskTests(TestCase):
             reverse("prompt_task_completion_time", args=[task.id]),
             {"completed_at": future_local},
         )
-        self.assertEqual(response.status_code, 400)
-        self.assertContains(
-            response,
-            "Completion date/time cannot be in the future.",
-            status_code=400,
-        )
+        # 200 so htmx swaps the re-rendered form in and the error is visible
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Completion date/time cannot be in the future.")
 
         task.refresh_from_db()
         self.assertEqual(task.status, TaskStatus.TODO)

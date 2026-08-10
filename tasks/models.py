@@ -279,9 +279,10 @@ class Task(TimestampedModel):
             text = text[1:]
         priority = max(priority, Task.Priority.LOW)
 
-        # If colon is present, split into title and description
-        parts = text.split(":", 1)
-        if len(parts) == 2:
+        # If a colon followed by a space is present, split into title and description.
+        # Requiring the space keeps times ("3:30"), URLs and ratios in the title.
+        parts = text.split(": ", 1)
+        if len(parts) == 2 and parts[0].strip() and parts[1].strip():
             title, description = parts[0].strip(), parts[1].strip()
             return Task(title=title, description=description, priority=priority)
         return Task(title=text.strip(), priority=priority)

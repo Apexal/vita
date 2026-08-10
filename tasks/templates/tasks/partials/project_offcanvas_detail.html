@@ -60,7 +60,7 @@
   {% include "tasks/partials/board.html" with swap_oob=True columns=columns dropped_task_pk=None %}
 {% endif %}
 <div hx-get="{% url 'task_board_fragment' %}"
-     hx-target="#kanban-board"
-     hx-swap="outerHTML"
+     hx-target="#board-refresh-region"
+     hx-swap="innerHTML"
      hx-trigger="load"
      style="display:none"></div>
