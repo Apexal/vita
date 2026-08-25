@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -138,16 +139,13 @@ WSGI_APPLICATION = "vita.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DB_PATH = Path(os.getenv("DB_PATH", BASE_DIR / "db.sqlite3"))
+# DB_PATH = Path(os.getenv("DB_PATH", BASE_DIR / "db.sqlite3"))
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": DB_PATH,
-        "OPTIONS": {
-            "transaction_mode": "IMMEDIATE",
-        },
-    }
+    'default': dj_database_url.config(
+        conn_max_age=600,
+        conn_health_checks=True,
+    ),
 }
 
 
