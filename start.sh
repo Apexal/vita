@@ -19,7 +19,7 @@ python /code/manage.py db_worker &
 WORKER_PID=$!
 
 echo "Starting Daphne..."
-python -m daphne vita.asgi:application -b 0.0.0.0 -p 8000 &
+python -m daphne vita.asgi:application -b [::] -p 8000 &
 DAPHNE_PID=$!
 
 wait "$DAPHNE_PID"
