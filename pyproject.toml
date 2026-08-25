@@ -23,6 +23,9 @@ dependencies = [
     "channels[daphne,types]>=4.3.2",
 ]
 
+[tool.setuptools]
+packages = []
+
 [tool.djlint]
 profile="django"
 
