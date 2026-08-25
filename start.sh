@@ -10,16 +10,16 @@ cleanup() {
 
 trap cleanup TERM INT
 
-echo "Starting supercronic..."
-supercronic /code/crontab &
-CRONIC_PID=$!
+# echo "Starting supercronic..."
+# supercronic /code/crontab &
+# CRONIC_PID=$!
 
 echo "Starting db_worker..."
-python /code/manage.py db_worker &
+python manage.py db_worker &
 WORKER_PID=$!
 
 echo "Starting Daphne..."
-python -m daphne vita.asgi:application -b [::] -p 8000 &
+python -m daphne vita.asgi:application -b [::] -p 3000 &
 DAPHNE_PID=$!
 
 wait "$DAPHNE_PID"
