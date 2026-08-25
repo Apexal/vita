@@ -264,7 +264,7 @@ class Task(TimestampedModel):
     )
 
     @staticmethod
-    def from_text(text: str) -> Task:
+    def from_text(text: str) -> "Task":
         """Create a Task instance from a text input."""
         # If exclamation points are prefixed, set priority
         priority = Task.Priority.NORMAL
