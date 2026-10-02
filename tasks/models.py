@@ -17,6 +17,7 @@ class Tag(TimestampedModel):
     color = models.CharField(
         blank=True,
         help_text="Optional CSS color name for UI accents.",
+        max_length=50
     )
     description = models.TextField(
         blank=True,
