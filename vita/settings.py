@@ -139,26 +139,33 @@ WSGI_APPLICATION = "vita.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# DB_PATH = Path(os.getenv("DB_PATH", BASE_DIR / "db.sqlite3"))
+# SQLite by default (DB_PATH points at the Fly volume in production).
+# DATABASE_URL, if set, overrides this.
+DB_PATH = Path(os.getenv("DB_PATH", BASE_DIR / "db.sqlite3"))
 
 DATABASES = {
-    'default': dj_database_url.config(
+    "default": dj_database_url.config(
+        default=f"sqlite:///{DB_PATH}",
         conn_max_age=600,
         conn_health_checks=True,
     ),
 }
 
-
-def _enable_wal_mode(sender, connection, **kwargs):
-    if connection.vendor == "sqlite":
-        cursor = connection.cursor()
-        cursor.execute("PRAGMA journal_mode=WAL;")
-        cursor.execute("PRAGMA busy_timeout=5000;")
-
-
-from django.db.backends.signals import connection_created  # noqa: E402
-
-connection_created.connect(_enable_wal_mode)
+if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
+    DATABASES["default"]["OPTIONS"] = {
+        # Take the write lock up front so concurrent writers (web + db_worker)
+        # wait on busy_timeout instead of failing with "database is locked".
+        "transaction_mode": "IMMEDIATE",
+        "timeout": 20,
+        "init_command": (
+            "PRAGMA journal_mode=WAL;"
+            "PRAGMA synchronous=NORMAL;"
+            "PRAGMA temp_store=MEMORY;"
+            "PRAGMA mmap_size=134217728;"
+            "PRAGMA journal_size_limit=27103364;"
+            "PRAGMA cache_size=2000;"
+        ),
+    }
 
 # Tasks
 TASKS = {"default": {"BACKEND": "django_tasks.backends.database.DatabaseBackend"}}

@@ -14,6 +14,11 @@ trap cleanup TERM INT
 # supercronic /code/crontab &
 # CRONIC_PID=$!
 
+# Migrate here rather than via fly.toml's release_command: release machines
+# don't mount volumes, so they'd migrate a throwaway SQLite file.
+echo "Running migrations..."
+python manage.py migrate --noinput
+
 echo "Starting db_worker..."
 python manage.py db_worker &
 WORKER_PID=$!
