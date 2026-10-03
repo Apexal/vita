@@ -1,5 +1,5 @@
-*/15 * * * * /code/manage.py enqueue_tasks --task run_routines
-0 5 * * * /code/manage.py enqueue_tasks --task recalculate_contact_strengths
+*/15 * * * * python /code/manage.py enqueue_tasks --task run_routines
+0 5 * * * python /code/manage.py enqueue_tasks --task recalculate_contact_strengths
 # Push notifications temporarily disabled:
-# */15 * * * * /code/manage.py enqueue_tasks --task send_long_in_progress_tasks_notification
-# 0 8-23 * * * /code/manage.py enqueue_tasks --task send_inactivity_notification_if_applicable
+# */15 * * * * python /code/manage.py enqueue_tasks --task send_long_in_progress_tasks_notification
+# 0 8-23 * * * python /code/manage.py enqueue_tasks --task send_inactivity_notification_if_applicable

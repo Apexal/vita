@@ -10,9 +10,9 @@ cleanup() {
 
 trap cleanup TERM INT
 
-# echo "Starting supercronic..."
-# supercronic /code/crontab &
-# CRONIC_PID=$!
+echo "Starting supercronic..."
+supercronic /code/crontab &
+CRONIC_PID=$!
 
 # Migrate here rather than via fly.toml's release_command: release machines
 # don't mount volumes, so they'd migrate a throwaway SQLite file.
